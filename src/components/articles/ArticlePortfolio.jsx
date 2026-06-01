@@ -28,6 +28,7 @@ function ArticlePortfolio({ dataWrapper, id }) {
         scheduler.clearAllWithTag(tag)
         scheduler.schedule(() => setSearchQuery(searchInput), 300, tag)
         return () => scheduler.clearAllWithTag(tag)
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- scheduler functions are stable module-level closures
     }, [searchInput])
 
     return (
@@ -69,6 +70,12 @@ function ArticlePortfolioItems({ dataWrapper, selectedItemCategoryId, searchQuer
     const resultsAnnouncement = language.getString("portfolio_search_results")
         ?.replace("{x}", filteredItems.length) ?? ""
 
+    const liveRegion = (
+        <div aria-live="polite" aria-atomic="true" className="visually-hidden">
+            {resultsAnnouncement}
+        </div>
+    )
+
     if (filteredItems.length === 0 && searchQuery) {
         const escapedQuery = (searchQuery || "")
             .replace(/&/g, "&amp;")
@@ -81,9 +88,7 @@ function ArticlePortfolioItems({ dataWrapper, selectedItemCategoryId, searchQuer
 
         return (
             <>
-                <div aria-live="polite" aria-atomic="true" className="visually-hidden">
-                    {resultsAnnouncement}
-                </div>
+                {liveRegion}
                 <div className="portfolio-search-empty-state">
                     <i className="fa-solid fa-magnifying-glass portfolio-search-empty-state-icon" aria-hidden="true"/>
                     <p className="portfolio-search-empty-state-message text-3"
@@ -101,9 +106,7 @@ function ArticlePortfolioItems({ dataWrapper, selectedItemCategoryId, searchQuer
     if(dataWrapper.categories?.length) {
         return (
             <>
-                <div aria-live="polite" aria-atomic="true" className="visually-hidden">
-                    {resultsAnnouncement}
-                </div>
+                {liveRegion}
                 <Transitionable id={dataWrapper.uniqueId}
                                 refreshFlag={refreshFlag}
                                 delayBetweenItems={100}
@@ -120,9 +123,7 @@ function ArticlePortfolioItems({ dataWrapper, selectedItemCategoryId, searchQuer
     else {
         return (
             <>
-                <div aria-live="polite" aria-atomic="true" className="visually-hidden">
-                    {resultsAnnouncement}
-                </div>
+                {liveRegion}
                 <div className={`article-portfolio-items ${itemsPerRowClass} mb-3 mb-lg-2`}>
                     {filteredItems.map((itemWrapper, key) => (
                         <ArticlePortfolioItem itemWrapper={itemWrapper}

@@ -14,7 +14,7 @@ function PortfolioSearchBar({ searchInput, setSearchInput }) {
     return (
         <div role="search" className="portfolio-search-bar">
             <label htmlFor="portfolio-search" className="visually-hidden">
-                {language.getString("portfolio_search_placeholder")}
+                {language.getString("portfolio_search_label")}
             </label>
             <div className="portfolio-search-bar-inner">
                 <i className="fa-solid fa-magnifying-glass portfolio-search-bar-icon"
