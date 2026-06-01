@@ -8,6 +8,8 @@ import AvatarView from "/src/components/generic/AvatarView.jsx"
 import {Tag, Tags} from "/src/components/generic/Tags.jsx"
 import ArticleItemPreviewMenu from "/src/components/articles/partials/ArticleItemPreviewMenu.jsx"
 import {useLanguage} from "/src/providers/LanguageProvider.jsx"
+import PortfolioSearchBar from "/src/components/articles/partials/PortfolioSearchBar.jsx"
+import {useScheduler} from "/src/hooks/scheduler.js"
 
 /**
  * @param {ArticleDataWrapper} dataWrapper
@@ -17,6 +19,17 @@ import {useLanguage} from "/src/providers/LanguageProvider.jsx"
  */
 function ArticlePortfolio({ dataWrapper, id }) {
     const [selectedItemCategoryId, setSelectedItemCategoryId] = useState(null)
+    const [searchInput, setSearchInput] = useState("")
+    const [searchQuery, setSearchQuery] = useState("")
+    const scheduler = useScheduler()
+
+    useEffect(() => {
+        const tag = `portfolio-search-debounce-${dataWrapper.uniqueId}`
+        scheduler.clearAllWithTag(tag)
+        scheduler.schedule(() => setSearchQuery(searchInput), 300, tag)
+        return () => scheduler.clearAllWithTag(tag)
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- scheduler functions are stable module-level closures
+    }, [searchInput])
 
     return (
         <Article id={dataWrapper.uniqueId}
@@ -25,8 +38,12 @@ function ArticlePortfolio({ dataWrapper, id }) {
                  className={`article-portfolio`}
                  selectedItemCategoryId={selectedItemCategoryId}
                  setSelectedItemCategoryId={setSelectedItemCategoryId}>
+            <PortfolioSearchBar searchInput={searchInput}
+                                setSearchInput={setSearchInput}/>
             <ArticlePortfolioItems dataWrapper={dataWrapper}
-                                   selectedItemCategoryId={selectedItemCategoryId}/>
+                                   selectedItemCategoryId={selectedItemCategoryId}
+                                   searchQuery={searchQuery}
+                                   onClearSearch={() => setSearchInput("")}/>
         </Article>
     )
 }
@@ -37,43 +54,83 @@ function ArticlePortfolio({ dataWrapper, id }) {
  * @return {JSX.Element}
  * @constructor
  */
-function ArticlePortfolioItems({ dataWrapper, selectedItemCategoryId }) {
+function ArticlePortfolioItems({ dataWrapper, selectedItemCategoryId, searchQuery, onClearSearch }) {
     const constants = useConstants()
     const language = useLanguage()
     const viewport = useViewport()
 
-    const filteredItems = dataWrapper.getOrderedItemsFilteredBy(selectedItemCategoryId)
+    const filteredItems = dataWrapper.getOrderedItemsFilteredBySearch(selectedItemCategoryId, searchQuery)
     const customBreakpoint = viewport.getCustomBreakpoint(constants.SWIPER_BREAKPOINTS_FOR_THREE_SLIDES)
 
     const itemsPerRow = customBreakpoint?.slidesPerView || 1
     const itemsPerRowClass = `article-portfolio-items-${itemsPerRow}-per-row`
 
-    const refreshFlag = dataWrapper.categories?.length ?
-        selectedItemCategoryId + "-" + language.getSelectedLanguage()?.id :
-        language.getSelectedLanguage()?.id
+    const refreshFlag = `${selectedItemCategoryId}-${searchQuery}-${language.getSelectedLanguage()?.id}`
+
+    const resultsAnnouncement = language.getString("portfolio_search_results")
+        ?.replace("{x}", filteredItems.length) ?? ""
+
+    const liveRegion = (
+        <div aria-live="polite" aria-atomic="true" className="visually-hidden">
+            {resultsAnnouncement}
+        </div>
+    )
+
+    if (filteredItems.length === 0 && searchQuery) {
+        const escapedQuery = (searchQuery || "")
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+        const noResultsMessage = language.getString("portfolio_search_no_results")
+            ?.replace("{x}", escapedQuery) ?? ""
+        const resetLabel = language.getString("portfolio_search_reset") ?? "Reset"
+
+        return (
+            <>
+                {liveRegion}
+                <div className="portfolio-search-empty-state">
+                    <i className="fa-solid fa-magnifying-glass portfolio-search-empty-state-icon" aria-hidden="true"/>
+                    <p className="portfolio-search-empty-state-message text-3"
+                       dangerouslySetInnerHTML={{__html: noResultsMessage}}/>
+                    <button type="button"
+                            className="portfolio-search-empty-state-reset text-2"
+                            onClick={onClearSearch}>
+                        {resetLabel}
+                    </button>
+                </div>
+            </>
+        )
+    }
 
     if(dataWrapper.categories?.length) {
         return (
-            <Transitionable id={dataWrapper.uniqueId}
-                            refreshFlag={refreshFlag}
-                            delayBetweenItems={100}
-                            animation={Transitionable.Animations.POP}
-                            className={`article-portfolio-items ${itemsPerRowClass}`}>
-                {filteredItems.map((itemWrapper, key) => (
-                    <ArticlePortfolioItem itemWrapper={itemWrapper}
-                                          key={key}/>
-                ))}
-            </Transitionable>
+            <>
+                {liveRegion}
+                <Transitionable id={dataWrapper.uniqueId}
+                                refreshFlag={refreshFlag}
+                                delayBetweenItems={100}
+                                animation={Transitionable.Animations.POP}
+                                className={`article-portfolio-items ${itemsPerRowClass}`}>
+                    {filteredItems.map((itemWrapper, key) => (
+                        <ArticlePortfolioItem itemWrapper={itemWrapper}
+                                              key={key}/>
+                    ))}
+                </Transitionable>
+            </>
         )
     }
     else {
         return (
-            <div className={`article-portfolio-items ${itemsPerRowClass} mb-3 mb-lg-2`}>
-                {filteredItems.map((itemWrapper, key) => (
-                    <ArticlePortfolioItem itemWrapper={itemWrapper}
-                                          key={key}/>
-                ))}
-            </div>
+            <>
+                {liveRegion}
+                <div className={`article-portfolio-items ${itemsPerRowClass} mb-3 mb-lg-2`}>
+                    {filteredItems.map((itemWrapper, key) => (
+                        <ArticlePortfolioItem itemWrapper={itemWrapper}
+                                              key={key}/>
+                    ))}
+                </div>
+            </>
         )
     }
 }

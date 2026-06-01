@@ -93,3 +93,43 @@ div.article-portfolio-item-body {
 div.article-portfolio-item-footer {
     margin-top: 10px;
 }
+
+div.portfolio-search-empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 20px;
+    text-align: center;
+
+    i.portfolio-search-empty-state-icon {
+        font-size: 2rem;
+        color: var(--theme-texts-light-2);
+        margin-bottom: 14px;
+    }
+
+    p.portfolio-search-empty-state-message {
+        color: var(--theme-texts-light-2);
+        margin-bottom: 16px;
+    }
+
+    button.portfolio-search-empty-state-reset {
+        background: transparent;
+        border: 1px solid var(--theme-primary);
+        border-radius: $standard-border-radius;
+        color: var(--theme-primary);
+        padding: 6px 16px;
+        cursor: pointer;
+        transition: background-color 0.15s ease, color 0.15s ease;
+
+        &:hover {
+            background-color: var(--theme-primary);
+            color: var(--theme-boards-background);
+        }
+
+        &:focus-visible {
+            outline: 2px solid var(--theme-primary);
+            outline-offset: 2px;
+        }
+    }
+}

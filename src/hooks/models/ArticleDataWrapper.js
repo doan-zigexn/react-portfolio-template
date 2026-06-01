@@ -6,6 +6,7 @@
 
 import ArticleItemDataWrapper from "/src/hooks/models/ArticleItemDataWrapper.js"
 import {useUtils} from "/src/hooks/utils.js"
+import {filterItemsBySearch} from "/src/utils/searchFilter.js"
 
 const utils = useUtils()
 
@@ -155,6 +156,10 @@ export default class ArticleDataWrapper {
         return this.orderedItems.filter(item => {
             return item.categoryId === categoryId
         })
+    }
+
+    getOrderedItemsFilteredBySearch(categoryId, query) {
+        return filterItemsBySearch(this.getOrderedItemsFilteredBy(categoryId), query)
     }
 
     _evaluate() {
