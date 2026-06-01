@@ -37,6 +37,10 @@ describe('filterItemsBySearch', () => {
         expect(filterItemsBySearch(ITEMS, null)).toHaveLength(3)
     })
 
+    it('returns all items when query is whitespace only', () => {
+        expect(filterItemsBySearch(ITEMS, '   ')).toHaveLength(3)
+    })
+
     it('matches title case-insensitively', () => {
         const result = filterItemsBySearch(ITEMS, 'chess')
         expect(result).toHaveLength(1)
