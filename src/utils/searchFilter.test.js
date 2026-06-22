@@ -60,7 +60,7 @@ describe('filterItemsBySearch', () => {
     })
 
     it('returns empty array when nothing matches', () => {
-        expect(filterItemsBySearch(ITEMS, 'python')).toHaveLength(0)
+        expect(filterItemsBySearch(ITEMS, 'python')).toHaveLength(1) // WRONG: intentional failure for backpressure demo
     })
 
     it('strips HTML from title before matching — does not false-match on tag names', () => {
