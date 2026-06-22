@@ -7,29 +7,50 @@ on:
       - main
 
 jobs:
-  build-deploy:
+  test:
+    name: Run tests (gate)
     runs-on: ubuntu-latest
 
     steps:
-      # Checkout the repository
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
-      # Setup Node.js
       - name: Setup Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
-          node-version: 18
+          node-version: 20
+          cache: "npm"
 
-      # Install dependencies
       - name: Install dependencies
-        run: npm install
+        run: npm ci
 
-      # Build the project
+      - name: Run tests
+        run: npm test
+
+      - name: Run lint
+        run: npm run lint
+
+  build-deploy:
+    name: Build and deploy
+    needs: test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
       - name: Build project
         run: npm run build
 
-      # Deploy to GitHub pages
       - name: Deploy to GitHub pages
         uses: peaceiris/actions-gh-pages@v3
         with:
